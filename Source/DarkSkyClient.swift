@@ -29,7 +29,7 @@ open class DarkSkyClient : NSObject {
     public init(apiKey key: String) {
         apiKey = key
     }
-
+    
     /// Gets the current `Forecast` at a specified latitude and longitude and returns it in a block.
     ///
     /// - parameter lat:           Latitude at which to get the `Forecast`.
@@ -63,10 +63,19 @@ open class DarkSkyClient : NSObject {
             } else {
                 do {
                     let jsonObject = try JSONSerialization.jsonObject(with: data!, options: .mutableContainers)
-                    if let json = jsonObject as? NSDictionary, let httpURLResponse = response as? HTTPURLResponse {
-                        let forecast = Forecast(fromJSON: json)
-                        let requestMetadata = RequestMetadata(fromHTTPHeaderFields: httpURLResponse.allHeaderFields)
-                        completionHandler(Result.success(forecast, requestMetadata))
+                    if let json = jsonObject as? NSDictionary,
+                        let httpURLResponse = response as? HTTPURLResponse {
+                        
+                        if let errorResponse = json["error"] as? String,
+                            let responseCode = json["code"] as? Int, errorResponse.isEmpty == false {
+                            let invalidLocation = ForecastIOError.StringResponseError(errorResponse, responseCode)
+                            completionHandler(Result.failure(invalidLocation))
+                        }
+                        else {
+                            let forecast = Forecast(fromJSON: json)
+                            let requestMetadata = RequestMetadata(fromHTTPHeaderFields: httpURLResponse.allHeaderFields)
+                            completionHandler(Result.success(forecast, requestMetadata))
+                        }
                     }
                 } catch _ {
                     let invalidJSONError = ForecastIOError.invalidJSON(data!)
@@ -108,7 +117,7 @@ open class DarkSkyClient : NSObject {
             queryItems.append(URLQueryItem(name: "exclude", value: excludeFieldsString))
         }
         urlBuilder.queryItems = queryItems
-    
+        
         return urlBuilder.url!
     }
 }
