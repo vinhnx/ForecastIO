@@ -13,4 +13,7 @@ public enum ForecastIOError: Error {
     
     /// Error due to invalid JSON.
     case invalidJSON(Data)
+    
+    /// Genral error response with string and error code.
+    case StringResponseError(String, Int)
 }
