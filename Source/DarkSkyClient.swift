@@ -65,8 +65,8 @@ open class DarkSkyClient : NSObject {
                     let jsonObject = try JSONSerialization.jsonObject(with: data!, options: .mutableContainers)
                     if let json = jsonObject as? NSDictionary,
                         let httpURLResponse = response as? HTTPURLResponse {
-                        if let errorResponse = json["error"] as? String,
-                            let responseCode = json["code"] as? Int, errorResponse.isEmpty == false {
+                        if let errorResponse = json["error"] as? String, errorResponse.isEmpty == false,
+                            let responseCode = json["code"] as? Int {
                             let invalidLocation = ForecastIOError.generalResponseError(errorResponse, responseCode)
                             completionHandler(Result.failure(invalidLocation))
                         }
